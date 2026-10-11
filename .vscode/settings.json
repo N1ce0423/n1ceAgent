@@ -1,0 +1,24 @@
+{
+    "editor.autoIndent": "full",
+    "[python]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
+    "background.fullscreen": {
+        "useFront": true,
+        "style": {
+            "background-position": "100%",
+            "background-size": "full_screen",
+            "opacity": 0.4
+        },
+        "styles": [
+        ],
+        "images": [
+            "C:\\Users\\armstrong\\Pictures\\ameath.png"
+        ],
+        "interval": 0,
+        "random": false
+    }
+}

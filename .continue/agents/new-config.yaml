@@ -1,0 +1,15 @@
+# This is an example configuration file
+# To learn more, see the full config.yaml reference: https://docs.continue.dev/reference
+
+name: Example Config
+version: 1.0.0
+schema: v1
+
+# Define which models can be used
+# https://docs.continue.dev/customization/models
+models:
+  - name: gpt-5.5
+    provider: openai
+    model: gpt-5.5
+    apiKey: sk-6309963c010140728d8e405d77a314df
+    apiBase: https://right.codes/codex/v1

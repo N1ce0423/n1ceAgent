@@ -1,0 +1,22 @@
+.conda-gliner2/
+.models/
+.runtime/
+__pycache__/
+
+# 本地 Conda 环境
+.conda/
+
+# 环境配置和密钥
+.env
+.env.*
+!.env.example
+
+# 本地数据库及其临时文件
+/memory.db
+/memory.db-*
+/memory/test/
+/memory/md
+
+# Python 缓存和日志
+*.py[cod]
+*.log
