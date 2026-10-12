@@ -27,6 +27,10 @@ class MemoryStore(Protocol):
         """删除指定 ID 的记忆，返回是否找到并删除。"""
         ...
 
+    def remove_memories_by_session(self, session_id: str) -> int:
+        """删除指定 session_id 的记忆，返回删除的数量。"""
+        ...
+
     def contains(self, memory_id: str) -> bool:
         """判断指定 ID 是否存在。"""
         ...

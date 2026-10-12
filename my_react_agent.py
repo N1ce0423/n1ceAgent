@@ -1,5 +1,6 @@
 import re
-from typing import Optional, List, Tuple
+from threading import Event
+from typing import Any, Callable, Optional, List, Tuple
 from HelloAgentsLLM import HelloAgentsLLM
 from agent import Agent
 from tool_registry import ToolRegistry
@@ -85,6 +86,10 @@ Action: 选择一个行动，格式必须是以下之一:
 现在开始你的推理和行动:
 """
 
+class AgentRunCancelled(RuntimeError):
+    """当前请求在步骤边界停止；已经执行的工具操作不会撤销。"""
+
+
 class MyReactAgent(Agent):
     def __init__(
             self,
@@ -116,7 +121,21 @@ class MyReactAgent(Agent):
         if self.tool_registry is not None:
             self.tool_registry.set_session(self.session_id)
 
-    def run(self, input_text: str, **kwargs) -> str:
+    def run(
+            self, input_text: str,
+            event_callback: Optional[Callable[[dict[str, Any]], None]] = None,
+            cancel_event: Optional[Event] = None,
+            **kwargs,
+    ) -> str:
+        """执行一轮任务，可将实际 ReAct 步骤实时推送给界面。"""
+        def check_cancelled() -> None:
+            if cancel_event is not None and cancel_event.is_set():
+                raise AgentRunCancelled("Agent run cancelled.")
+
+        def emit(event_type: str, **payload: Any) -> None:
+            if event_callback is not None:
+                event_callback({"type": event_type, "step": current_step, **payload})
+
         execution_history: List[str] = []
         current_step = 0
 
@@ -125,8 +144,10 @@ class MyReactAgent(Agent):
                       if self.tool_registry else "No tools available.")
 
         while current_step < self.max_steps:
+            check_cancelled()
             current_step += 1
             print(f"Step------{current_step}/{self.max_steps}------")
+            emit("step", max_steps=self.max_steps)
 
             history_str = "\n".join(execution_history)
             prompt = self.prompt_template.format(
@@ -143,24 +164,35 @@ class MyReactAgent(Agent):
                                  + f"\n\n当前 session_id: {self.session_id}"})
             messages.append({"role": "user", "content": prompt})
             reponse_text = self.llm_client.think(messages, **kwargs)
+            check_cancelled()
+            if not isinstance(reponse_text, str) or not reponse_text.strip():
+                raise RuntimeError("The LLM returned no response. Check the model service configuration.")
 
             thought, action = self._parse_output(reponse_text)
             print(f"Thought: {thought}")
             print(f"Action: {action}")
+            if thought:
+                emit("thought", content=thought)
 
             if action and action.startswith("Finish"):
                 final_answer = self._parse_action_input(action)
+                emit("final", content=final_answer, status="completed")
                 return final_answer
 
             if action:
                 tool_name, tool_input = self._parse_action(action)
+                check_cancelled()
+                emit("action", tool=tool_name, input=tool_input)
                 observation = (self.tool_registry.execute_tool(tool_name, tool_input)
                                if self.tool_registry else "Error: No tools available.")
+                emit("observation", content=str(observation))
+                check_cancelled()
                 print(f"Observation: {observation}")
                 execution_history.append(f"Action: {action}")
                 execution_history.append(f"Observation: {observation}")
 
         final_answer = "Reached maximum steps without a conclusive answer."
+        emit("final", content=final_answer, status="exhausted")
         return final_answer
 
     def _parse_output(self, output: str) -> Tuple[Optional[str], Optional[str]]:

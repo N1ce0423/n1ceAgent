@@ -97,6 +97,8 @@ class MemoryTool(Tool):
             return self._add_memory(**kwargs)
         elif action == "search":
             return self._search_memory(**kwargs)
+        elif action == "forget_with_session":
+            return self._forget_with_session(**kwargs)
         # elif action == "summary":
         #     return self._get_memory_summary(**kwargs)
         # elif action == "stats":
@@ -228,35 +230,45 @@ class MemoryTool(Tool):
         except Exception as e:
             return f"Error searching memory: {str(e)}"
 
-    def _forget(
-        self,
-        stratagy: str = "importance_based",
-        treshold: float = 0.1,
-        max_age_days: int = 30
-    ) -> str:
+    def _forget_with_session(
+            self,
+            session_id: str
+        ) -> str:
         try:
-            count = self.memory_manager.forget_memories(
-                strategy = stratagy,
-            )
-            return f"Successfully forgot {count} memories based on the '{stratagy}' strategy."
+            count = self.memory_manager.forget_memories_by_session(session_id=session_id)
+            return f"Successfully forgot {count} memories associated with session '{session_id}'."
         except Exception as e:
-            return f"Error forgetting memories: {str(e)}"
+            return f"Error forgetting memories for session '{session_id}': {str(e)}"
 
-    def _consolidate(
-        self,
-        from_type: str = "working",
-        to_type: str = "episodic",
-        importance_threshold: float = 0.7
-    ) -> str:
-        try:
-            count = self.memory_manager.consolidate_memories(
-                from_type = from_type,
-                to_type = to_type,
-                importance_threshold = importance_threshold
-            )
-            return f"Successfully consolidated {count} memories from '{from_type}' to '{to_type}'."
-        except Exception as e:
-            return f"Error consolidating memories: {str(e)}"
+    # def _forget(
+    #     self,
+    #     stratagy: str = "importance_based",
+    #     treshold: float = 0.1,
+    #     max_age_days: int = 30
+    # ) -> str:
+    #     try:
+    #         count = self.memory_manager.forget_memories(
+    #             strategy = stratagy,
+    #         )
+    #         return f"Successfully forgot {count} memories based on the '{stratagy}' strategy."
+    #     except Exception as e:
+    #         return f"Error forgetting memories: {str(e)}"
+
+    # def _consolidate(
+    #     self,
+    #     from_type: str = "working",
+    #     to_type: str = "episodic",
+    #     importance_threshold: float = 0.7
+    # ) -> str:
+    #     try:
+    #         count = self.memory_manager.consolidate_memories(
+    #             from_type = from_type,
+    #             to_type = to_type,
+    #             importance_threshold = importance_threshold
+    #         )
+    #         return f"Successfully consolidated {count} memories from '{from_type}' to '{to_type}'."
+    #     except Exception as e:
+    #         return f"Error consolidating memories: {str(e)}"
 
     
 

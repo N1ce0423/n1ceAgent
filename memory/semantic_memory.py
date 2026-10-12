@@ -107,6 +107,13 @@ class SemanticMemory(MemoryStore):
                 return self._persist_semantic(None, [], [], None, None, deleting=True, memory_id=memory_id)
             return self._persist_semantic(previous, [], [], None, previous, deleting=True)
 
+    def remove_memories_by_session(self, session_id: str) -> int:
+        """删除指定 session_id 的记忆，返回删除的数量。"""
+        with self._write_guard():
+            memory_ids = [item.id for item in self.get_all()
+                          if item.metadata.get("session_id") == session_id]
+            return sum(self.remove(memory_id) for memory_id in memory_ids)
+
     def _write_guard(self):
         return self.__dict__.setdefault("_write_lock", RLock())
 
@@ -220,6 +227,7 @@ class SemanticMemory(MemoryStore):
         )
 
     def _resolve_pending_write(self, path: Path, record: dict[str, Any]) -> bool:
+        """检查日志并尝试补偿或确认已提交的写入。"""
         if record["phase"] == "preparing":
             path.unlink(missing_ok=True)
             return False

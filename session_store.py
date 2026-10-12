@@ -62,3 +62,10 @@ class SessionStore:
         with self._connect() as connection:
             rows = connection.execute("SELECT session_id FROM chat_sessions ORDER BY session_id").fetchall()
         return [SessionInfo(row["session_id"]) for row in rows]
+
+    def delete_session(self, session_id: str) -> None:
+        """删除会话 ID；调用方必须先完成该会话的记忆清理。"""
+        with self._connect() as connection:
+            cursor = connection.execute("DELETE FROM chat_sessions WHERE session_id = ?", (session_id,))
+            if cursor.rowcount == 0:
+                raise ValueError(f"Session not found: {session_id}")

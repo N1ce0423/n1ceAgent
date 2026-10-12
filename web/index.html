@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Agent Studio · 我的智能助手</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="spark" viewBox="0 0 24 24"><path d="m12 3 2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7L12 3Z"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="chat" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8 8H5l-3 2v-10a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/></symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></symbol>
+    <symbol id="chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+    <symbol id="activity" viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></symbol>
+    <symbol id="copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="3"/><path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></symbol>
+  </svg>
+
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Agent Studio 首页">
+      <span class="brand-mark"><svg class="icon"><use href="#spark"/></svg></span>
+      <span><strong>Agent Studio</strong><small>你的本地智能助手</small></span>
+    </a>
+    <button id="new-session" class="new-session"><svg class="icon"><use href="#plus"/></svg>新建会话</button>
+    <div class="section-label">记忆会话 <span id="session-count">0</span></div>
+    <nav id="sessions" class="session-list" aria-label="选择记忆会话"></nav>
+    <div class="sidebar-bottom">
+      <div class="local-badge"><span class="status-dot"></span> 在本机运行</div>
+      <p>会话关联 agent 的记忆。<br>聊天内容仅在当前页面显示。</p>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar">
+      <div class="page-title"><strong>我的 Agent</strong><span>ReAct · 工具与记忆</span></div>
+      <label class="thought-toggle"><input id="show-thoughts" type="checkbox" checked><span>显示思考</span></label>
+    </header>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <section id="conversation" class="conversation" aria-label="聊天内容">
+      <div id="welcome" class="welcome">
+        <span class="welcome-mark"><svg class="icon"><use href="#spark"/></svg></span>
+        <div class="eyebrow">A LITTLE HELP, A CLEARER PATH</div>
+        <h1>从一个问题开始。</h1>
+        <p>和你的 agent 聊聊，<br>让思考、工具调用和结果都有迹可循。</p>
+        <div class="suggestions">
+          <button class="suggestion" data-prompt="帮我计算 (128 + 256) × 3，并说明结果。"><span class="suggestion-icon">＋</span><strong>算个结果</strong><span>把计算交给工具</span><span class="suggestion-arrow">↗</span></button>
+          <button class="suggestion" data-prompt="搜索 Python 官方文档中关于 asyncio 的介绍，并给我一个简短总结。"><span class="suggestion-icon">⌕</span><strong>查点资料</strong><span>搜索信息并整理</span><span class="suggestion-arrow">↗</span></button>
+          <button class="suggestion" data-prompt="检索当前会话的记忆，告诉我你记得哪些与我有关的信息；没有记录就如实说明。"><span class="suggestion-icon">◇</span><strong>看看记忆</strong><span>检索当前会话信息</span><span class="suggestion-arrow">↗</span></button>
+        </div>
+      </div>
+      <div id="messages" class="messages"></div>
+    </section>
+    <footer class="composer-area">
+      <form id="chat-form" class="composer">
+        <label class="sr-only" for="message-input">给 agent 的消息</label>
+        <textarea id="message-input" placeholder="有什么想交给 agent 的？" rows="2" maxlength="12000" disabled></textarea>
+        <div class="composer-bottom">
+          <span id="connection-status"><span class="status-dot"></span> 正在连接本地服务</span>
+          <button id="stop" class="stop-button" type="button" hidden disabled>■ 停止</button>
+          <button id="send" class="send-button" type="submit" aria-label="发送消息" disabled><svg class="icon"><use href="#arrow"/></svg></button>
+        </div>
+      </form>
+      <div class="composer-hint"><span>Enter 发送 · Shift + Enter 换行</span><span>思考区展示 ReAct 步骤摘要</span></div>
+    </footer>
+  </main>
+  <dialog id="delete-dialog" aria-labelledby="delete-title">
+    <h2 id="delete-title">删除这个对话？</h2>
+    <p>将清空此 session 的所有记忆，并删除会话及当前页面中的聊天内容。此操作不可撤销。</p>
+    <code id="delete-target"></code>
+    <p id="delete-error" class="delete-error" role="alert" hidden></p>
+    <div class="dialog-actions">
+      <button id="cancel-delete" type="button" autofocus>取消</button>
+      <button id="confirm-delete" type="button" class="danger-button">删除对话和记忆</button>
+    </div>
+  </dialog>
+</body>
+</html>

@@ -41,6 +41,10 @@ class WorkingMemory(MemoryStore):
         self._expire_old_memories()
         return list(self.memories)
 
+    def contains(self, memory_id: str) -> bool:
+        self._expire_old_memories()
+        return any(memory.id == memory_id for memory in self.memories)
+
     def remove(self, memory_id: str) -> bool:
         for memory in self.memories:
             if memory.id == memory_id:
@@ -48,9 +52,14 @@ class WorkingMemory(MemoryStore):
                 return True
         return False
 
-    def contains(self, memory_id: str) -> bool:
-        self._expire_old_memories()
-        return any(memory.id == memory_id for memory in self.memories)
+    def remove_memories_by_session(self, session_id: str) -> int:
+        """删除指定 session_id 的记忆，返回删除的数量。"""
+        count = 0
+        for memory in self.memories[:]:
+            if memory.metadata.get("session_id") == session_id:
+                self.memories.remove(memory)
+                count += 1
+        return count
 
     def _expire_old_memories(self) -> int:
         """清理过期的记忆"""

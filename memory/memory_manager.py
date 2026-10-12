@@ -113,6 +113,15 @@ class MemoryManager:
                 )()
         return count
 
+    def forget_memories_by_session(self, session_id: str) -> int:
+        """根据 session_id 忘记相关记忆"""
+        if not isinstance(session_id, str) or not session_id.strip():
+            raise ValueError("session_id must be a non-empty string")
+        count = 0
+        for memory in self.memory_types.values():
+            count += memory.remove_memories_by_session(session_id)
+        return count
+
     def get_all_working_memory(self) -> List[MemoryItem]:
         """获取所有工作记忆"""
         return self.memory_types['working'].get_all()

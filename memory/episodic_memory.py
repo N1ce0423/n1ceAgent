@@ -259,6 +259,13 @@ class EpisodicMemory(MemoryStore):
         finally:
             self._refresh_sessions()
 
+    def remove_memories_by_session(self, session_id: str) -> int:
+        """删除指定 session_id 的记忆，返回删除的数量。"""
+        # 无向量服务时仍删除 SQLite；remove 负责向量、正文和会话缓存的清理。
+        memory_ids = [item.id for item in self.doc_store.get_all()
+                      if item.metadata.get("session_id") == session_id]
+        return sum(self.remove(memory_id) for memory_id in memory_ids)
+
     def _expire_old_memories(self) -> int:
         """删除过期记忆，返回删除数量。"""
         age_limit = self._ttl_delta(self.ttl_days)
